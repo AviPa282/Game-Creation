@@ -1,849 +1,353 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-<title>Pass the Bomb 💣</title>
-<style>
-  @import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Space+Mono:ital,wght@0,400;0,700;1,400&display=swap');
-
-  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-
-  :root {
-    --red: #ff3c3c;
-    --green: #4caf50;
-    --orange: #ff9800;
-    --blue: #4fc3f7;
-    --purple: #ce93d8;
-    --bg: #09090f;
-    --surface: #13131e;
-    --surface2: #1c1c2e;
-    --border: #2a2a3e;
-    --text: #e8e8f0;
-    --muted: #666680;
-  }
-
-  body {
-    background: var(--bg);
-    color: var(--text);
-    font-family: 'Space Mono', monospace;
-    min-height: 100dvh;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    padding: 16px;
-    overflow-x: hidden;
-  }
-
-  h1 {
-    font-family: 'Bebas Neue', sans-serif;
-    font-size: 40px;
-    letter-spacing: 5px;
-    color: var(--red);
-    margin-bottom: 2px;
-  }
-
-  .subtitle { font-size: 10px; color: var(--muted); letter-spacing: 2px; margin-bottom: 20px; }
-
-  .screen { width: 100%; max-width: 420px; }
-  .hidden { display: none !important; }
-
-  .card {
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: 14px;
-    padding: 20px;
-    margin-bottom: 14px;
-  }
-
-  .card-label {
-    font-size: 10px;
-    letter-spacing: 3px;
-    color: var(--muted);
-    margin-bottom: 14px;
-    text-transform: uppercase;
-  }
-
-  input[type="text"] {
-    width: 100%;
-    background: var(--bg);
-    border: 1px solid var(--border);
-    border-radius: 10px;
-    color: var(--text);
-    font-family: 'Space Mono', monospace;
-    font-size: 16px;
-    padding: 12px 16px;
-    margin-bottom: 12px;
-    outline: none;
-    transition: border-color 0.2s;
-    -webkit-appearance: none;
-  }
-  input[type="text"]:focus { border-color: var(--red); }
-
-  .btn {
-    width: 100%;
-    padding: 16px;
-    border-radius: 10px;
-    border: none;
-    font-family: 'Bebas Neue', sans-serif;
-    font-size: 22px;
-    letter-spacing: 3px;
-    cursor: pointer;
-    transition: transform 0.1s, opacity 0.15s;
-    -webkit-tap-highlight-color: transparent;
-  }
-  .btn:active { transform: scale(0.96); }
-  .btn-red { background: var(--red); color: var(--bg); }
-  .btn-green { background: var(--green); color: var(--bg); }
-  .btn-ghost {
-    background: transparent;
-    border: 1px solid var(--border);
-    color: var(--muted);
-    font-family: 'Space Mono', monospace;
-    font-size: 14px;
-    letter-spacing: 1px;
-  }
-  .btn:disabled { opacity: 0.35; pointer-events: none; }
-  .btn + .btn { margin-top: 10px; }
-
-  /* Lobby players */
-  .player-list { display: flex; flex-direction: column; gap: 8px; margin-bottom: 14px; }
-  .player-row {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    background: var(--surface2);
-    border-radius: 8px;
-    padding: 10px 14px;
-    font-size: 13px;
-  }
-  .seat-badge {
-    width: 28px; height: 28px;
-    border-radius: 50%;
-    background: var(--red);
-    color: var(--bg);
-    font-family: 'Bebas Neue', sans-serif;
-    font-size: 16px;
-    display: flex; align-items: center; justify-content: center;
-    flex-shrink: 0;
-  }
-  .host-badge {
-    margin-left: auto;
-    font-size: 10px;
-    letter-spacing: 2px;
-    color: var(--orange);
-  }
-  .you-badge {
-    margin-left: auto;
-    font-size: 10px;
-    letter-spacing: 2px;
-    color: var(--blue);
-  }
-
-  /* Room code display */
-  .room-code {
-    font-family: 'Bebas Neue', sans-serif;
-    font-size: 52px;
-    letter-spacing: 10px;
-    color: var(--text);
-    text-align: center;
-    margin: 8px 0;
-  }
-  .room-code-hint { font-size: 11px; color: var(--muted); text-align: center; margin-bottom: 4px; }
-
-  /* Role reveal */
-  .role-reveal { text-align: center; padding: 24px 0; }
-  .role-emoji { font-size: 72px; margin-bottom: 12px; }
-  .role-title {
-    font-family: 'Bebas Neue', sans-serif;
-    font-size: 38px;
-    letter-spacing: 4px;
-    margin-bottom: 8px;
-  }
-  .role-desc { font-size: 12px; color: #aaa; line-height: 1.8; }
-  .role-bomber { color: var(--red); }
-  .role-detective { color: var(--green); }
-  .role-civilian { color: var(--muted); }
-
-  /* Game screen */
-  .item-display {
-    text-align: center;
-    padding: 16px 0;
-  }
-  .item-emoji {
-    font-size: 80px;
-    display: block;
-    margin-bottom: 8px;
-    transition: transform 0.3s;
-  }
-  .item-name {
-    font-family: 'Bebas Neue', sans-serif;
-    font-size: 28px;
-    letter-spacing: 3px;
-    margin-bottom: 6px;
-  }
-  .item-desc { font-size: 11px; color: var(--muted); line-height: 1.7; }
-
-  /* Timer */
-  .timer-bar { height: 6px; background: var(--surface2); border-radius: 3px; margin-bottom: 6px; overflow: hidden; }
-  .timer-fill { height: 100%; border-radius: 3px; transition: width 1s linear, background 0.5s; }
-  .timer-num {
-    font-family: 'Bebas Neue', sans-serif;
-    font-size: 60px;
-    letter-spacing: 2px;
-    text-align: center;
-    line-height: 1;
-    margin-bottom: 4px;
-    transition: color 0.3s;
-  }
-
-  /* Swipe zone */
-  .swipe-area {
-    display: flex;
-    gap: 10px;
-    margin-bottom: 10px;
-  }
-  .swipe-btn {
-    flex: 1;
-    padding: 18px;
-    background: var(--surface2);
-    border: 1px solid var(--border);
-    border-radius: 12px;
-    font-family: 'Bebas Neue', sans-serif;
-    font-size: 22px;
-    letter-spacing: 2px;
-    color: var(--text);
-    cursor: pointer;
-    transition: background 0.15s, transform 0.1s;
-    -webkit-tap-highlight-color: transparent;
-    text-align: center;
-  }
-  .swipe-btn:active { transform: scale(0.94); background: var(--border); }
-
-  /* Item slide animation */
-  @keyframes slideInRight { from { transform: translateX(80px); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
-  @keyframes slideInLeft  { from { transform: translateX(-80px); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
-  .slide-right { animation: slideInRight 0.35s ease; }
-  .slide-left  { animation: slideInLeft 0.35s ease; }
-
-  /* Explosion */
-  .explosion-screen { text-align: center; padding: 24px 0; }
-  .explosion-emoji { font-size: 80px; margin-bottom: 10px; }
-  .explosion-title { font-family: 'Bebas Neue', sans-serif; font-size: 52px; color: var(--red); letter-spacing: 4px; margin-bottom: 8px; }
-  .explosion-sub { font-size: 13px; color: #aaa; margin-bottom: 20px; }
-
-  /* Voting */
-  .vote-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 14px; }
-  .vote-option {
-    padding: 14px 10px;
-    background: var(--surface2);
-    border: 1px solid var(--border);
-    border-radius: 10px;
-    color: var(--text);
-    font-family: 'Space Mono', monospace;
-    font-size: 13px;
-    cursor: pointer;
-    text-align: center;
-    transition: border-color 0.2s, background 0.2s;
-    -webkit-tap-highlight-color: transparent;
-  }
-  .vote-option.selected { border-color: var(--red); background: #2a1010; color: var(--red); }
-
-  /* Results */
-  .result-screen { text-align: center; padding: 24px 0; }
-  .result-emoji { font-size: 64px; margin-bottom: 12px; }
-  .result-title { font-family: 'Bebas Neue', sans-serif; font-size: 40px; letter-spacing: 4px; margin-bottom: 8px; }
-  .result-sub { font-size: 12px; color: #aaa; margin-bottom: 16px; line-height: 1.8; }
-
-  /* Scoreboard */
-  .scoreboard { display: flex; flex-direction: column; gap: 6px; margin-bottom: 14px; }
-  .score-row {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    background: var(--surface2);
-    border-radius: 8px;
-    padding: 10px 14px;
-    font-size: 13px;
-  }
-  .score-val {
-    font-family: 'Bebas Neue', sans-serif;
-    font-size: 22px;
-    color: var(--orange);
-    letter-spacing: 2px;
-  }
-
-  /* Power btn */
-  .power-btn {
-    width: 100%;
-    padding: 14px;
-    border-radius: 10px;
-    border: 1px solid var(--purple);
-    background: transparent;
-    color: var(--purple);
-    font-family: 'Bebas Neue', sans-serif;
-    font-size: 20px;
-    letter-spacing: 2px;
-    cursor: pointer;
-    transition: background 0.15s;
-    -webkit-tap-highlight-color: transparent;
-    margin-bottom: 10px;
-  }
-  .power-btn:active { background: #2a1a3a; }
-
-  /* Player picker modal */
-  .player-picker { display: flex; flex-direction: column; gap: 8px; margin-bottom: 14px; }
-  .pick-option {
-    padding: 14px;
-    background: var(--surface2);
-    border: 1px solid var(--border);
-    border-radius: 10px;
-    color: var(--text);
-    font-size: 14px;
-    cursor: pointer;
-    text-align: center;
-    -webkit-tap-highlight-color: transparent;
-  }
-  .pick-option:active { background: var(--border); }
-
-  /* Toast notification */
-  #toast {
-    position: fixed;
-    bottom: 24px;
-    left: 50%;
-    transform: translateX(-50%);
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: 10px;
-    padding: 12px 20px;
-    font-size: 13px;
-    color: var(--text);
-    opacity: 0;
-    transition: opacity 0.3s;
-    pointer-events: none;
-    z-index: 100;
-    white-space: nowrap;
-  }
-  #toast.show { opacity: 1; }
-
-  /* Freeze overlay */
-  #freeze-overlay {
-    position: fixed; inset: 0;
-    background: rgba(79, 195, 247, 0.15);
-    display: none;
-    align-items: center;
-    justify-content: center;
-    flex-direction: column;
-    z-index: 50;
-    pointer-events: none;
-  }
-  #freeze-overlay.active { display: flex; }
-  .freeze-text {
-    font-family: 'Bebas Neue', sans-serif;
-    font-size: 48px;
-    color: var(--blue);
-    letter-spacing: 4px;
-  }
-
-  .peek-result {
-    background: var(--surface2);
-    border: 1px solid var(--purple);
-    border-radius: 10px;
-    padding: 16px;
-    text-align: center;
-    margin-bottom: 14px;
-    font-size: 13px;
-    color: var(--purple);
-    line-height: 1.8;
-  }
-</style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+  <title>Bomb Squad 💣</title>
+  <script src="https://cdn.socket.io/4.5.4/socket.io.min.js"></script>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Space+Mono:ital,wght@0,400;0,700;1,400&display=swap');
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --red: #ff3c3c; --green: #4caf50; --orange: #ff9800; --blue: #4fc3f7; --purple: #ce93d8;
+      --bg: #09090f; --surface: #13131e; --surface2: #1c1c2e; --border: #2a2a3e; --text: #e8e8f0; --muted: #666680;
+    }
+    body { background: var(--bg); color: var(--text); font-family: 'Space Mono', monospace; min-height: 100dvh; display: flex; flex-direction: column; align-items: center; padding: 12px; overflow-x: hidden; }
+    h1 { font-family: 'Bebas Neue', sans-serif; font-size: 32px; letter-spacing: 4px; color: var(--red); margin-bottom: 4px; }
+    .container { width: 100%; max-width: 480px; }
+    .hidden { display: none !important; }
+    .screen { display: none; } .screen.active { display: flex; flex-direction: column; }
+    #startScreen { justify-content: center; min-height: 100dvh; gap: 20px; }
+    .start-header { text-align: center; margin-bottom: 20px; }
+    .start-header h1 { font-size: 52px; margin-bottom: 8px; }
+    .start-header p { font-size: 13px; color: var(--muted); margin-bottom: 8px; }
+    .start-options { display: flex; gap: 12px; flex-direction: column; }
+    input[type="text"] { width: 100%; background: var(--surface); border: 1px solid var(--border); border-radius: 10px; color: var(--text); font-family: 'Space Mono', monospace; font-size: 16px; padding: 14px 16px; margin-bottom: 12px; outline: none; transition: border-color 0.2s; -webkit-appearance: none; }
+    input:focus { border-color: var(--red); }
+    .btn { width: 100%; padding: 16px; border-radius: 10px; border: none; font-family: 'Bebas Neue', sans-serif; font-size: 20px; letter-spacing: 2px; cursor: pointer; transition: transform 0.1s, opacity 0.15s; -webkit-tap-highlight-color: transparent; }
+    .btn:active { transform: scale(0.96); } .btn:disabled { opacity: 0.4; pointer-events: none; }
+    .btn-red { background: var(--red); color: var(--bg); } .btn-green { background: var(--green); color: var(--bg); } .btn-blue { background: var(--blue); color: var(--bg); }
+    .btn-ghost { background: transparent; border: 1px solid var(--border); color: var(--text); }
+    .btn + .btn { margin-top: 10px; }
+    #lobbyScreen { justify-content: flex-start; gap: 16px; padding-bottom: 20px; }
+    .lobby-header { text-align: center; width: 100%; }
+    .lobby-header h1 { font-size: 28px; margin-bottom: 8px; }
+    .room-code-display { font-family: 'Bebas Neue', sans-serif; font-size: 48px; letter-spacing: 8px; color: var(--blue); text-align: center; margin: 12px 0; background: var(--surface); padding: 16px; border-radius: 10px; border: 2px solid var(--blue); }
+    .player-list { display: flex; flex-direction: column; gap: 8px; margin: 16px 0; }
+    .player-row { display: flex; align-items: center; gap: 12px; background: var(--surface); border-radius: 8px; padding: 12px 14px; font-size: 14px; }
+    .seat-badge { width: 32px; height: 32px; border-radius: 50%; background: var(--red); color: var(--bg); font-family: 'Bebas Neue', sans-serif; font-size: 18px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+    .player-name { flex: 1; }
+    .badge { font-size: 10px; letter-spacing: 1px; padding: 4px 8px; border-radius: 4px; }
+    .badge-host { background: var(--orange); color: var(--bg); } .badge-you { background: var(--blue); color: var(--bg); }
+    #gameScreen { justify-content: flex-start; gap: 12px; padding-bottom: 20px; }
+    .timer-section { width: 100%; background: var(--surface); padding: 16px; border-radius: 10px; margin-bottom: 12px; }
+    .timer-num { font-family: 'Bebas Neue', sans-serif; font-size: 64px; letter-spacing: 2px; text-align: center; line-height: 1; color: var(--red); transition: color 0.3s; }
+    .timer-num.warning { color: var(--orange); } .timer-num.critical { color: var(--red); animation: pulse 0.5s infinite; }
+    @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.6; } }
+    .timer-label { font-size: 11px; color: var(--muted); text-align: center; margin-top: 8px; letter-spacing: 1px; }
+    .round-info { font-size: 12px; color: var(--muted); text-align: center; margin-top: 8px; }
+    .match-counter { text-align: center; font-size: 13px; color: var(--green); padding: 8px; background: rgba(76, 175, 80, 0.1); border-radius: 6px; margin-bottom: 12px; }
+    .card-display { background: var(--surface); border: 2px solid var(--border); border-radius: 12px; padding: 24px; text-align: center; margin-bottom: 16px; min-height: 280px; display: flex; flex-direction: column; justify-content: center; }
+    .card-emoji { font-size: 64px; margin-bottom: 12px; }
+    .card-category { font-size: 11px; color: var(--muted); letter-spacing: 1px; margin-bottom: 8px; text-transform: uppercase; }
+    .card-label { font-family: 'Bebas Neue', sans-serif; font-size: 24px; letter-spacing: 2px; color: var(--orange); margin-bottom: 12px; }
+    .card-text { font-size: 22px; line-height: 1.5; margin-bottom: 12px; }
+    .swipe-area { display: flex; gap: 10px; margin-top: auto; margin-bottom: 12px; }
+    .swipe-btn { flex: 1; padding: 18px; background: var(--surface2); border: 2px solid var(--border); border-radius: 10px; font-family: 'Bebas Neue', sans-serif; font-size: 28px; letter-spacing: 1px; color: var(--text); cursor: pointer; transition: all 0.1s; -webkit-tap-highlight-color: transparent; }
+    .swipe-btn:active { transform: scale(0.92); border-color: var(--blue); background: var(--border); }
+    @keyframes matchPulse { 0% { transform: scale(1); } 50% { transform: scale(1.05); } 100% { transform: scale(1); } }
+    .card-display.matched { animation: matchPulse 0.6s ease; border-color: var(--green); background: rgba(76, 175, 80, 0.1); }
+    .screen-center { justify-content: center; min-height: 100dvh; }
+    .message-box { text-align: center; background: var(--surface); border-radius: 12px; padding: 32px; border: 2px solid var(--border); }
+    .message-emoji { font-size: 80px; margin-bottom: 16px; }
+    .message-title { font-family: 'Bebas Neue', sans-serif; font-size: 42px; letter-spacing: 2px; margin-bottom: 12px; }
+    .message-subtitle { font-size: 13px; color: var(--muted); margin-bottom: 20px; line-height: 1.6; }
+    .scoreboard { display: flex; flex-direction: column; gap: 8px; margin: 20px 0; max-height: 300px; overflow-y: auto; }
+    .score-row { display: flex; align-items: center; justify-content: space-between; background: var(--surface2); border-radius: 8px; padding: 12px; font-size: 13px; }
+    .score-val { font-family: 'Bebas Neue', sans-serif; font-size: 20px; color: var(--orange); letter-spacing: 1px; }
+    .eliminated-badge { background: var(--red); color: var(--bg); font-size: 9px; padding: 3px 6px; border-radius: 3px; margin-left: 8px; }
+    .survivor-list, .eliminated-list { margin-bottom: 20px; }
+    .list-label { font-size: 11px; letter-spacing: 1px; color: var(--muted); margin-bottom: 8px; text-transform: uppercase; }
+    .survivor-list .list-label { color: var(--green); } .eliminated-list .list-label { color: var(--red); }
+    @keyframes bounce { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-20px); } }
+    @media (max-width: 480px) { h1 { font-size: 28px; } .card-text { font-size: 18px; } .timer-num { font-size: 52px; } .swipe-btn { font-size: 24px; } }
+  </style>
 </head>
 <body>
+  <div class="container">
+    <div id="startScreen" class="screen active">
+      <div class="start-header">
+        <h1>💣 BOMB SQUAD</h1>
+        <p>Pass cards in a circle to match questions with answers!</p>
+        <p>Race against the timer before questions explode.</p>
+      </div>
+      <div class="start-options">
+        <input type="text" id="playerName" placeholder="Enter your name" maxlength="20">
+        <button class="btn btn-green" onclick="createGame()">CREATE ROOM</button>
+        <div style="position: relative; margin: 12px 0;">
+          <hr style="border: none; border-top: 1px solid var(--border);">
+          <div style="position: absolute; top: -8px; left: 50%; transform: translateX(-50%); background: var(--bg); padding: 0 8px; font-size: 12px; color: var(--muted);">OR</div>
+        </div>
+        <input type="text" id="joinCode" placeholder="Enter room code (4 letters)" maxlength="4" style="text-transform: uppercase;">
+        <button class="btn btn-blue" onclick="joinGame()">JOIN ROOM</button>
+      </div>
+    </div>
 
-<h1>PASS THE BOMB</h1>
-<p class="subtitle">CHAOS · STRATEGY · DECEPTION</p>
+    <div id="lobbyScreen" class="screen">
+      <div class="lobby-header">
+        <h1>LOBBY</h1>
+        <p style="font-size: 13px; color: var(--muted); margin-bottom: 12px;">Share this code with friends</p>
+        <div class="room-code-display" id="roomCodeDisplay">----</div>
+      </div>
+      <div>
+        <div style="font-size: 11px; letter-spacing: 1px; color: var(--muted); margin-bottom: 12px; text-transform: uppercase;">PLAYERS</div>
+        <div class="player-list" id="playerList"></div>
+        <div style="font-size: 12px; color: var(--muted); margin-top: 12px; padding: 12px; background: var(--surface); border-radius: 8px; text-align: center;">
+          <span id="playerCount">0</span>/10 Players
+        </div>
+      </div>
+      <div style="margin-top: auto; display: flex; gap: 10px;">
+        <button class="btn btn-ghost" onclick="goToStart()" style="flex: 1;">LEAVE</button>
+        <button class="btn btn-green" id="startGameBtn" onclick="startGame()" style="flex: 2;" disabled>START GAME</button>
+      </div>
+    </div>
 
-<!-- TOAST -->
-<div id="toast"></div>
+    <div id="gameScreen" class="screen">
+      <div class="timer-section">
+        <div class="timer-num" id="timerNum">60</div>
+        <div class="timer-label">SECONDS LEFT</div>
+        <div class="round-info">Round <span id="roundNum">1</span> of 5 | <span id="pairCount">3</span> pairs to match</div>
+      </div>
+      <div class="match-counter">Matched: <span id="matchedCount">0</span> / <span id="totalPairs">3</span></div>
+      <div class="card-display" id="cardDisplay">
+        <div style="color: var(--muted); font-size: 13px;">Loading card...</div>
+      </div>
+      <div class="swipe-area">
+        <button class="swipe-btn left" onclick="swipePass('left')">← LEFT</button>
+        <button class="swipe-btn right" onclick="swipePass('right')">RIGHT →</button>
+      </div>
+    </div>
 
-<!-- FREEZE OVERLAY -->
-<div id="freeze-overlay">
-  <div style="font-size:80px">⏸️</div>
-  <div class="freeze-text">TIMER FROZEN</div>
-</div>
+    <div id="betweenRoundsScreen" class="screen screen-center">
+      <div class="message-box">
+        <div class="message-emoji">🎉</div>
+        <div class="message-title">ROUND COMPLETE</div>
+        <div class="message-subtitle" id="roundMessage"></div>
+        <div class="survivor-list">
+          <div class="list-label">SURVIVING</div>
+          <div class="scoreboard" id="survivorList"></div>
+        </div>
+        <div class="eliminated-list" id="eliminatedSection" class="hidden">
+          <div class="list-label">ELIMINATED</div>
+          <div class="scoreboard" id="eliminatedList"></div>
+        </div>
+        <div style="margin-top: auto;">
+          <div id="hostOnlyControls" class="hidden">
+            <button class="btn btn-green" onclick="nextRound()" style="margin-top: 16px;">NEXT ROUND →</button>
+          </div>
+          <div id="spectatorWait" style="font-size: 13px; color: var(--muted); text-align: center; margin-top: 16px;">Waiting for host to continue...</div>
+        </div>
+      </div>
+    </div>
 
-<!-- SCREEN: Home -->
-<div class="screen" id="screen-home">
-  <div class="card">
-    <div class="card-label">Your Name</div>
-    <input type="text" id="name-input" placeholder="Enter your name..." maxlength="14" autocomplete="off" autocorrect="off" />
-    <button class="btn btn-red" onclick="createRoom()">CREATE ROOM</button>
-    <button class="btn btn-ghost" style="margin-top:10px" onclick="showJoin()">JOIN ROOM</button>
-  </div>
-  <div class="card" style="font-size:11px;color:var(--muted);line-height:1.9">
-    <div class="card-label">Items &amp; Powers</div>
-    💣 <b style="color:var(--text)">Bomb</b> — Pass it before it explodes!<br>
-    🛡️ <b style="color:var(--text)">Shield</b> — Immune from the vote<br>
-    🔍 <b style="color:var(--text)">Magnifier</b> — Peek at someone's item<br>
-    🔀 <b style="color:var(--text)">Swap</b> — Force two players to swap<br>
-    ⏸️ <b style="color:var(--text)">Freeze</b> — Stop the timer 5 sec<br>
-    💀 <b style="color:var(--text)">Cursed Box</b> — Suspicious in the vote<br>
-    🎭 <b style="color:var(--text)">Disguise</b> — Appears as something else<br>
-    💎 <b style="color:var(--text)">Gem</b> — Bonus points if you survive
-  </div>
-</div>
+    <div id="gameOverScreen" class="screen screen-center">
+      <div class="message-box">
+        <div class="message-emoji">💥</div>
+        <div class="message-title">GAME OVER</div>
+        <div class="message-subtitle" id="gameOverMessage"></div>
+        <div class="list-label" style="margin-top: 20px; margin-bottom: 12px;">FINAL SCORES</div>
+        <div class="scoreboard" id="finalScores"></div>
+        <button class="btn btn-green" onclick="goToStart()" style="margin-top: 20px;">PLAY AGAIN</button>
+      </div>
+    </div>
 
-<!-- SCREEN: Join -->
-<div class="screen hidden" id="screen-join">
-  <div class="card">
-    <div class="card-label">Join a Room</div>
-    <input type="text" id="join-name-input" placeholder="Your name..." maxlength="14" autocomplete="off" autocorrect="off" />
-    <input type="text" id="code-input" placeholder="Room code (e.g. AB3X)" maxlength="4" style="text-transform:uppercase" autocomplete="off" autocorrect="off" autocapitalize="characters" />
-    <button class="btn btn-red" onclick="joinRoom()">JOIN</button>
-    <button class="btn btn-ghost" style="margin-top:10px" onclick="showHome()">BACK</button>
-  </div>
-</div>
-
-<!-- SCREEN: Lobby -->
-<div class="screen hidden" id="screen-lobby">
-  <div class="card">
-    <div class="room-code-hint">ROOM CODE — SHARE WITH FRIENDS</div>
-    <div class="room-code" id="lobby-code">----</div>
-  </div>
-  <div class="card">
-    <div class="card-label">Players</div>
-    <div class="player-list" id="lobby-players"></div>
-    <button class="btn btn-red hidden" id="start-btn" onclick="startGame()">START GAME</button>
-    <p id="lobby-waiting" style="font-size:12px;color:var(--muted);text-align:center">Waiting for host to start...</p>
-  </div>
-  <div class="card" style="font-size:11px;color:var(--muted);line-height:1.9">
-    <div class="card-label">Sit in a circle</div>
-    The person to your <b style="color:var(--text)">right</b> gets items when you swipe right →<br>
-    The person to your <b style="color:var(--text)">left</b> gets items when you swipe left ←<br>
-    Sit in seat order: 1, 2, 3, 4...
-  </div>
-</div>
-
-<!-- SCREEN: Role reveal -->
-<div class="screen hidden" id="screen-role">
-  <div class="card">
-    <div class="role-reveal">
-      <div class="role-emoji" id="role-emoji">💣</div>
-      <div class="role-title role-bomber" id="role-title">BOMBER</div>
-      <div class="role-desc" id="role-desc">You start with the bomb. Pass it strategically — don't let anyone know!</div>
+    <div id="gameWonScreen" class="screen screen-center">
+      <div class="message-box">
+        <div class="message-emoji">🏆</div>
+        <div class="message-title">YOU WIN!</div>
+        <div class="message-subtitle">All rounds survived! The Bomb Squad triumphed!</div>
+        <div class="list-label" style="margin-top: 20px; margin-bottom: 12px;">SURVIVORS & SCORES</div>
+        <div class="scoreboard" id="winnerScores"></div>
+        <button class="btn btn-green" onclick="goToStart()" style="margin-top: 20px;">PLAY AGAIN</button>
+      </div>
     </div>
   </div>
-  <div class="card" style="font-size:11px;color:var(--muted);line-height:1.9" id="role-item-card">
-    <div class="card-label">Your Starting Item</div>
-    <div style="text-align:center;font-size:40px;margin-bottom:6px" id="role-item-emoji">💣</div>
-    <div style="text-align:center;font-size:14px;color:var(--text);margin-bottom:4px" id="role-item-name">Bomb</div>
-    <div style="text-align:center" id="role-item-desc">Pass it before it explodes!</div>
-  </div>
-  <button class="btn btn-red" onclick="readyToPlay()">I'M READY — HIDE MY SCREEN</button>
-</div>
 
-<!-- SCREEN: Game -->
-<div class="screen hidden" id="screen-game">
-  <div class="card">
-    <div class="timer-bar"><div class="timer-fill" id="timer-fill" style="width:100%;background:var(--green)"></div></div>
-    <div class="timer-num" id="timer-num" style="color:var(--green)">60</div>
-    <div style="font-size:10px;letter-spacing:2px;color:var(--muted);text-align:center;margin-bottom:14px">SECONDS</div>
-    <div class="item-display">
-      <span class="item-emoji" id="item-emoji">📦</span>
-      <div class="item-name" id="item-name">Package</div>
-      <div class="item-desc" id="item-desc">Just a regular package. Nothing special.</div>
-    </div>
-  </div>
+  <script>
+    const socket = io();
+    let gameState = {
+      playerId: null, playerName: null, roomCode: null, isHost: false, isAlive: true, currentCard: null,
+      players: [], scores: {}, activeRound: 1, timerLeft: 60, timerTotal: 60, matchedCount: 0, totalPairs: 0,
+    };
 
-  <div class="swipe-area">
-    <button class="swipe-btn" onclick="swipe('left')">← PASS LEFT</button>
-    <button class="swipe-btn" onclick="swipe('right')">PASS RIGHT →</button>
-  </div>
+    function showScreen(screenId) {
+      document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+      document.getElementById(screenId).classList.add('active');
+    }
 
-  <button class="power-btn hidden" id="power-btn" onclick="usePower()">⚡ USE POWER</button>
+    function createGame() {
+      const name = document.getElementById('playerName').value.trim();
+      if (!name) { alert('Please enter your name'); return; }
+      socket.emit('create_room', { name });
+    }
 
-  <!-- Player picker (for peek/swap) -->
-  <div class="card hidden" id="player-picker">
-    <div class="card-label" id="picker-label">Select a player:</div>
-    <div class="player-picker" id="picker-options"></div>
-    <button class="btn btn-ghost" onclick="cancelPicker()">CANCEL</button>
-  </div>
+    function joinGame() {
+      const name = document.getElementById('playerName').value.trim();
+      const code = document.getElementById('joinCode').value.trim().toUpperCase();
+      if (!name) { alert('Please enter your name'); return; }
+      if (!code || code.length !== 4) { alert('Please enter a valid 4-letter room code'); return; }
+      socket.emit('join_room', { code, name });
+    }
 
-  <!-- Peek result -->
-  <div class="peek-result hidden" id="peek-result"></div>
+    function startGame() { socket.emit('start_game'); }
+    function swipePass(direction) { socket.emit('swipe_pass', { direction }); }
+    function nextRound() { socket.emit('next_round'); }
+    function goToStart() { window.location.reload(); }
 
-  <div class="card" style="font-size:11px;color:var(--muted)">
-    <div style="display:flex;justify-content:space-between">
-      <span>Round</span><span id="game-round" style="color:var(--text)">1</span>
-    </div>
-    <div style="display:flex;justify-content:space-between;margin-top:6px">
-      <span>Your seat</span><span id="game-seat" style="color:var(--text)">—</span>
-    </div>
-    <div style="display:flex;justify-content:space-between;margin-top:6px">
-      <span>Your role</span><span id="game-role" style="color:var(--text)">—</span>
-    </div>
-  </div>
-</div>
+    socket.on('room_created', ({ code, playerId }) => {
+      gameState.playerId = playerId;
+      gameState.roomCode = code;
+      gameState.isHost = true;
+      gameState.playerName = document.getElementById('playerName').value;
+      showScreen('lobbyScreen');
+    });
 
-<!-- SCREEN: Explosion + voting -->
-<div class="screen hidden" id="screen-explosion">
-  <div class="card">
-    <div class="explosion-screen">
-      <div class="explosion-emoji">💥</div>
-      <div class="explosion-title">BOOM!</div>
-      <div class="explosion-sub" id="explosion-sub">The bomb exploded on Alex!</div>
-    </div>
-  </div>
-  <div class="card" id="voting-section">
-    <div class="card-label">VOTE: WHO IS THE BOMBER?</div>
-    <div class="vote-grid" id="vote-options"></div>
-    <button class="btn btn-red" onclick="submitVote()">SUBMIT VOTE</button>
-  </div>
-  <div class="card hidden" id="vote-waiting">
-    <div style="font-size:12px;color:var(--muted);text-align:center;line-height:1.8">
-      You were eliminated.<br>Waiting for others to vote...
-    </div>
-  </div>
-</div>
+    socket.on('room_joined', ({ code, playerId }) => {
+      gameState.playerId = playerId;
+      gameState.roomCode = code;
+      gameState.playerName = document.getElementById('playerName').value;
+      showScreen('lobbyScreen');
+    });
 
-<!-- SCREEN: Results -->
-<div class="screen hidden" id="screen-results">
-  <div class="card">
-    <div class="result-screen">
-      <div class="result-emoji" id="result-emoji">🎉</div>
-      <div class="result-title" id="result-title">BOMBER CAUGHT!</div>
-      <div class="result-sub" id="result-sub"></div>
-    </div>
-  </div>
-  <div class="card">
-    <div class="card-label">Scoreboard</div>
-    <div class="scoreboard" id="scoreboard"></div>
-  </div>
-  <button class="btn btn-green hidden" id="play-again-btn" onclick="playAgain()">NEXT ROUND ▶</button>
-  <button class="btn btn-ghost hidden" id="wait-again-btn" style="margin-top:10px">Waiting for host...</button>
-</div>
+    socket.on('lobby_update', (data) => {
+      gameState.players = data.players;
+      gameState.scores = data.scores;
+      document.getElementById('roomCodeDisplay').textContent = data.code;
+      document.getElementById('playerCount').textContent = data.players.length;
+      const playerListHtml = data.players.map(p => `
+        <div class="player-row">
+          <div class="seat-badge">${p.seat + 1}</div>
+          <div class="player-name">${p.name}</div>
+          ${p.id === gameState.playerId ? '<span class="badge badge-you">YOU</span>' : ''}
+          ${p.id === data.host ? '<span class="badge badge-host">HOST</span>' : ''}
+        </div>
+      `).join('');
+      document.getElementById('playerList').innerHTML = playerListHtml;
+      const startBtn = document.getElementById('startGameBtn');
+      startBtn.disabled = data.players.length < 4;
+      gameState.isHost = data.host === gameState.playerId;
+      startBtn.style.display = gameState.isHost ? 'block' : 'none';
+    });
 
-<script src="/socket.io/socket.io.js"></script>
-<script>
-const socket = io();
-let myId = null;
-let myRoom = null;
-let myRole = null;
-let myItem = null;
-let mySeat = null;
-let timerTotal = 60;
-let selectedVote = null;
-let currentPlayers = [];
-let pendingPower = null;
-let isEliminated = false;
+    socket.on('round_start', ({ round, timerDuration, numPairs, card }) => {
+      gameState.activeRound = round;
+      gameState.timerTotal = timerDuration;
+      gameState.timerLeft = timerDuration;
+      gameState.totalPairs = numPairs;
+      gameState.matchedCount = 0;
+      gameState.currentCard = card;
+      gameState.isAlive = true;
+      document.getElementById('roundNum').textContent = round;
+      document.getElementById('pairCount').textContent = numPairs;
+      document.getElementById('totalPairs').textContent = numPairs;
+      document.getElementById('matchedCount').textContent = 0;
+      renderCard();
+      showScreen('gameScreen');
+    });
 
-// ── Navigation ──────────────────────────────────────────────────────────────
+    socket.on('card_received', ({ card }) => {
+      gameState.currentCard = card;
+      renderCard();
+    });
 
-function showScreen(id) {
-  document.querySelectorAll('.screen').forEach(s => s.classList.add('hidden'));
-  document.getElementById(id).classList.remove('hidden');
-}
-function showHome() { showScreen('screen-home'); }
-function showJoin() { showScreen('screen-join'); }
+    socket.on('timer_tick', ({ secondsLeft }) => {
+      gameState.timerLeft = secondsLeft;
+      document.getElementById('timerNum').textContent = secondsLeft;
+      const timerEl = document.getElementById('timerNum');
+      timerEl.classList.remove('warning', 'critical');
+      if (secondsLeft <= 10) timerEl.classList.add('critical');
+      else if (secondsLeft <= 20) timerEl.classList.add('warning');
+    });
 
-// ── Room actions ─────────────────────────────────────────────────────────────
+    socket.on('pair_matched', ({ count }) => {
+      gameState.matchedCount = count;
+      document.getElementById('matchedCount').textContent = count;
+      const cardDisplay = document.getElementById('cardDisplay');
+      cardDisplay.classList.add('matched');
+      setTimeout(() => cardDisplay.classList.remove('matched'), 600);
+    });
 
-function createRoom() {
-  const name = document.getElementById('name-input').value.trim().toUpperCase();
-  if (!name) return toast('Enter your name first');
-  socket.emit('create_room', { name });
-}
+    socket.on('round_end', ({ round, eliminated, survivors, scores, nextRound }) => {
+      gameState.scores = scores;
+      gameState.activeRound = nextRound;
+      document.getElementById('roundMessage').textContent = 
+        eliminated.length > 0 
+          ? `${eliminated.join(', ')} exploded! ${survivors.length} survive to Round ${nextRound}`
+          : `All pairs matched! Moving to Round ${nextRound}`;
+      const survivorHtml = survivors.map(p => `
+        <div class="score-row">
+          <span>${p.name}</span>
+          <span class="score-val">${p.score}</span>
+        </div>
+      `).join('');
+      document.getElementById('survivorList').innerHTML = survivorHtml;
+      if (eliminated.length > 0) {
+        document.getElementById('eliminatedSection').classList.remove('hidden');
+        const eliminatedHtml = eliminated.map(name => `
+          <div class="score-row">
+            <span>${name}</span>
+            <span class="eliminated-badge">💥</span>
+          </div>
+        `).join('');
+        document.getElementById('eliminatedList').innerHTML = eliminatedHtml;
+        if (eliminated.includes(gameState.playerName)) {
+          gameState.isAlive = false;
+          document.getElementById('spectatorWait').style.display = 'block';
+          document.getElementById('hostOnlyControls').style.display = 'none';
+        }
+      }
+      document.getElementById('hostOnlyControls').style.display = gameState.isHost ? 'block' : 'none';
+      document.getElementById('spectatorWait').style.display = gameState.isHost ? 'none' : 'block';
+      showScreen('betweenRoundsScreen');
+    });
 
-function joinRoom() {
-  const name = document.getElementById('join-name-input').value.trim().toUpperCase();
-  const code = document.getElementById('code-input').value.trim().toUpperCase();
-  if (!name) return toast('Enter your name');
-  if (code.length !== 4) return toast('Enter the 4-letter room code');
-  socket.emit('join_room', { name, code });
-}
+    socket.on('game_over', ({ reason, scores }) => {
+      gameState.scores = scores;
+      document.getElementById('gameOverMessage').textContent = 'The squad failed to survive all rounds...';
+      const sortedScores = Object.entries(scores).sort((a, b) => b[1] - a[1]);
+      const scoresHtml = sortedScores.map(([playerId, score]) => {
+        const player = gameState.players.find(p => p.id === playerId);
+        return `<div class="score-row"><span>${player?.name || 'Unknown'}</span><span class="score-val">${score}</span></div>`;
+      }).join('');
+      document.getElementById('finalScores').innerHTML = scoresHtml;
+      showScreen('gameOverScreen');
+    });
 
-function startGame() {
-  socket.emit('start_game');
-}
+    socket.on('game_won', ({ survivors, scores }) => {
+      gameState.scores = scores;
+      const scoresHtml = survivors.map(p => `
+        <div class="score-row">
+          <span>${p.name}</span>
+          <span class="score-val">${p.score}</span>
+        </div>
+      `).join('');
+      document.getElementById('winnerScores').innerHTML = scoresHtml;
+      showScreen('gameWonScreen');
+    });
 
-function readyToPlay() {
-  showScreen('screen-game');
-}
+    socket.on('error', (msg) => { alert('Error: ' + msg); });
 
-function swipe(direction) {
-  socket.emit('swipe_pass', { direction });
-  const emoji = document.getElementById('item-emoji');
-  emoji.classList.remove('slide-right', 'slide-left');
-  void emoji.offsetWidth;
-  emoji.classList.add(direction === 'right' ? 'slide-right' : 'slide-left');
-}
-
-function usePower() {
-  if (!myItem || !myItem.power) return;
-  const power = myItem.power;
-
-  if (power === 'freeze') {
-    socket.emit('use_power', {});
-  } else if (power === 'peek' || power === 'swap') {
-    pendingPower = power;
-    showPlayerPicker(power === 'peek' ? 'Who do you want to peek at?' : 'Pick first player to swap:');
-  } else if (power === 'gem' || power === 'curse' || power === 'disguise' || power === 'shield') {
-    toast('This item activates automatically!');
-  }
-}
-
-function showPlayerPicker(label) {
-  document.getElementById('picker-label').textContent = label;
-  const others = currentPlayers.filter(p => p.id !== myId);
-  document.getElementById('picker-options').innerHTML = others.map(p =>
-    `<div class="pick-option" onclick="confirmPick('${p.id}')">${p.name}</div>`
-  ).join('');
-  document.getElementById('player-picker').classList.remove('hidden');
-}
-
-function confirmPick(targetId) {
-  document.getElementById('player-picker').classList.add('hidden');
-  socket.emit('use_power', { targetId });
-  pendingPower = null;
-}
-
-function cancelPicker() {
-  document.getElementById('player-picker').classList.add('hidden');
-  pendingPower = null;
-}
-
-function submitVote() {
-  if (!selectedVote) return toast('Select a player to accuse');
-  socket.emit('submit_vote', { accusedId: selectedVote });
-  document.getElementById('voting-section').classList.add('hidden');
-  document.querySelector('#screen-explosion .card:last-of-type') ||
-    document.getElementById('screen-explosion').insertAdjacentHTML('beforeend',
-    '<div class="card"><div style="font-size:12px;color:var(--muted);text-align:center">Vote submitted. Waiting...</div></div>');
-}
-
-function playAgain() {
-  socket.emit('play_again');
-}
-
-// ── Socket events ─────────────────────────────────────────────────────────────
-
-socket.on('room_created', ({ code, playerId }) => {
-  myId = playerId;
-  myRoom = code;
-  document.getElementById('lobby-code').textContent = code;
-  showScreen('screen-lobby');
-});
-
-socket.on('room_joined', ({ code, playerId, seat }) => {
-  myId = playerId;
-  myRoom = code;
-  mySeat = seat;
-  document.getElementById('lobby-code').textContent = code;
-  showScreen('screen-lobby');
-});
-
-socket.on('lobby_update', ({ players, host, code }) => {
-  currentPlayers = players;
-  document.getElementById('lobby-code').textContent = code;
-
-  document.getElementById('lobby-players').innerHTML = players.map(p => {
-    const isMe = p.id === myId;
-    const isHost = p.id === host;
-    return `<div class="player-row">
-      <div class="seat-badge">${p.seat + 1}</div>
-      <span>${p.name}</span>
-      ${isHost ? '<span class="host-badge">HOST</span>' : ''}
-      ${isMe && !isHost ? '<span class="you-badge">YOU</span>' : ''}
-    </div>`;
-  }).join('');
-
-  const amHost = myId === host;
-  document.getElementById('start-btn').classList.toggle('hidden', !amHost);
-  document.getElementById('lobby-waiting').style.display = amHost ? 'none' : 'block';
-  document.getElementById('start-btn').disabled = players.length < 2;
-});
-
-socket.on('round_start', ({ role, myItem: item, players, timerDuration, round }) => {
-  myRole = role;
-  myItem = item;
-  mySeat = players.find(p => p.id === myId)?.seat ?? 0;
-  currentPlayers = players;
-  timerTotal = timerDuration;
-  selectedVote = null;
-  isEliminated = false;
-
-  // Role reveal
-  const roleEmoji   = { bomber: '💣', detective: '🔍', civilian: '👤' };
-  const roleLabel   = { bomber: 'BOMBER', detective: 'DETECTIVE', civilian: 'CIVILIAN' };
-  const roleClass   = { bomber: 'role-bomber', detective: 'role-detective', civilian: 'role-civilian' };
-  const roleDescs   = {
-    bomber: 'You secretly hold the bomb. Pass it before it explodes — and act natural!',
-    detective: 'You are the Detective. Yell "FREEZE!" in real life to accuse someone mid-round!',
-    civilian: 'Survive. Figure out who the bomber is. Don\'t get caught holding the bomb.',
-  };
-
-  document.getElementById('role-emoji').textContent = roleEmoji[role];
-  const titleEl = document.getElementById('role-title');
-  titleEl.textContent = roleLabel[role];
-  titleEl.className = 'role-title ' + roleClass[role];
-  document.getElementById('role-desc').textContent = roleDescs[role];
-
-  document.getElementById('role-item-emoji').textContent = item.emoji;
-  document.getElementById('role-item-name').textContent = item.name;
-  document.getElementById('role-item-desc').textContent = item.desc;
-
-  document.getElementById('game-round').textContent = round;
-  document.getElementById('game-seat').textContent = (mySeat + 1);
-  document.getElementById('game-role').textContent = roleLabel[role];
-
-  showScreen('screen-role');
-  updateItemDisplay(item);
-});
-
-socket.on('item_update', ({ myItem: item, passerName, direction }) => {
-  myItem = item;
-  updateItemDisplay(item);
-  if (passerName) {
-    const dir = direction === 'right' ? '→' : '←';
-    toast(`${passerName} passed ${dir}`);
-    const emoji = document.getElementById('item-emoji');
-    emoji.classList.remove('slide-right', 'slide-left');
-    void emoji.offsetWidth;
-    emoji.classList.add(direction === 'right' ? 'slide-left' : 'slide-right');
-  }
-});
-
-function updateItemDisplay(item) {
-  document.getElementById('item-emoji').textContent = item.emoji;
-  document.getElementById('item-name').textContent = item.name;
-  document.getElementById('item-desc').textContent = item.desc;
-  const powerBtn = document.getElementById('power-btn');
-  const hasPower = item.power && !['shield','curse','disguise','gem'].includes(item.power);
-  powerBtn.classList.toggle('hidden', !hasPower);
-}
-
-socket.on('timer_tick', ({ secondsLeft, total }) => {
-  const pct = (secondsLeft / total) * 100;
-  const fill = document.getElementById('timer-fill');
-  const num = document.getElementById('timer-num');
-  fill.style.width = pct + '%';
-  document.getElementById('timer-num').textContent = secondsLeft;
-
-  if (pct > 50) {
-    fill.style.background = 'var(--green)';
-    num.style.color = 'var(--green)';
-  } else if (pct > 25) {
-    fill.style.background = 'var(--orange)';
-    num.style.color = 'var(--orange)';
-  } else {
-    fill.style.background = 'var(--red)';
-    num.style.color = 'var(--red)';
-  }
-});
-
-socket.on('timer_freeze', ({ seconds }) => {
-  const overlay = document.getElementById('freeze-overlay');
-  overlay.classList.add('active');
-  setTimeout(() => overlay.classList.remove('active'), seconds * 1000);
-  toast(`⏸️ Timer frozen for ${seconds} seconds!`);
-});
-
-socket.on('explosion', ({ explodedPlayerId, explodedPlayerName, hasShield, players }) => {
-  currentPlayers = players;
-  showScreen('screen-explosion');
-
-  const shieldMsg = hasShield ? ' (but they have a Shield!)' : '';
-  document.getElementById('explosion-sub').textContent =
-    `💥 The bomb exploded on ${explodedPlayerName}!${shieldMsg}`;
-
-  isEliminated = explodedPlayerId === myId;
-
-  if (isEliminated) {
-    document.getElementById('voting-section').classList.add('hidden');
-    document.getElementById('vote-waiting').classList.remove('hidden');
-  } else {
-    document.getElementById('vote-waiting').classList.add('hidden');
-    document.getElementById('voting-section').classList.remove('hidden');
-    const voters = players.filter(p => p.id !== explodedPlayerId);
-    document.getElementById('vote-options').innerHTML = voters.map(p =>
-      `<div class="vote-option" onclick="selectVote('${p.id}', this)">${p.name}</div>`
-    ).join('');
-  }
-});
-
-function selectVote(id, el) {
-  selectedVote = id;
-  document.querySelectorAll('.vote-option').forEach(o => o.classList.remove('selected'));
-  el.classList.add('selected');
-}
-
-socket.on('round_result', ({ bomberCaught, bomberExploded, hasShield, bomberName, detectiveName, scores, players, isHost }) => {
-  currentPlayers = players;
-  showScreen('screen-results');
-
-  let emoji, title, sub;
-  if (bomberExploded && !hasShield) {
-    emoji = '🎉'; title = 'SELF DESTRUCT!';
-    sub = `The bomb blew up in ${bomberName}'s own hands!\nCivilians win this round!`;
-    document.getElementById('result-title').style.color = 'var(--green)';
-  } else if (bomberCaught) {
-    emoji = '🔍'; title = 'BOMBER CAUGHT!';
-    sub = `The group correctly identified ${bomberName} as the bomber!\nDetective ${detectiveName} is proud.`;
-    document.getElementById('result-title').style.color = 'var(--green)';
-  } else {
-    emoji = '💣'; title = 'BOMBER ESCAPES!';
-    sub = `${bomberName} fooled everyone and escaped!\nBomber wins this round.`;
-    document.getElementById('result-title').style.color = 'var(--red)';
-  }
-
-  document.getElementById('result-emoji').textContent = emoji;
-  document.getElementById('result-title').textContent = title;
-  document.getElementById('result-sub').textContent = sub;
-
-  // Scoreboard — sorted
-  const sorted = [...players].sort((a, b) => (scores[b.id] || 0) - (scores[a.id] || 0));
-  document.getElementById('scoreboard').innerHTML = sorted.map((p, i) => {
-    const isMe = p.id === myId;
-    return `<div class="score-row">
-      <span>${i === 0 ? '🏆 ' : ''}${p.name}${isMe ? ' (you)' : ''}</span>
-      <span class="score-val">${scores[p.id] || 0}</span>
-    </div>`;
-  }).join('');
-
-  const amHost = myId === isHost;
-  document.getElementById('play-again-btn').classList.toggle('hidden', !amHost);
-  document.getElementById('wait-again-btn').classList.toggle('hidden', amHost);
-});
-
-socket.on('peek_result', ({ targetName, item }) => {
-  const el = document.getElementById('peek-result');
-  el.classList.remove('hidden');
-  el.textContent = `🔍 ${targetName} is holding: ${item.emoji} ${item.name}`;
-  setTimeout(() => el.classList.add('hidden'), 6000);
-});
-
-socket.on('power_used', ({ by, power }) => {
-  toast(`⚡ ${by} used ${power}!`);
-});
-
-socket.on('player_left', ({ name }) => {
-  toast(`${name} left the game`);
-});
-
-socket.on('error', (msg) => {
-  toast('❌ ' + msg);
-});
-
-// ── Toast ──────────────────────────────────────────────────────────────────
-
-let toastTimeout;
-function toast(msg) {
-  const el = document.getElementById('toast');
-  el.textContent = msg;
-  el.classList.add('show');
-  clearTimeout(toastTimeout);
-  toastTimeout = setTimeout(() => el.classList.remove('show'), 3000);
-}
-</script>
+    function renderCard() {
+      if (!gameState.currentCard) return;
+      const card = gameState.currentCard;
+      const html = `
+        <div class="card-emoji">${card.emoji}</div>
+        <div class="card-category">${card.category}</div>
+        <div class="card-label">${card.label}</div>
+        <div class="card-text">${card.text}</div>
+      `;
+      document.getElementById('cardDisplay').innerHTML = html;
+    }
+  </script>
 </body>
 </html>

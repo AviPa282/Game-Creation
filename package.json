@@ -1,7 +1,7 @@
 {
-  "name": "pass-the-bomb",
+  "name": "bomb-squad",
   "version": "1.0.0",
-  "description": "A real-time multiplayer party game",
+  "description": "A frantic real-time trivia party game - pass cards to match questions with answers before the timer explodes!",
   "main": "server.js",
   "scripts": {
     "start": "node server.js"
